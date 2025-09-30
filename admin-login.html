@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Access - Power Outage Tracker</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: linear-gradient(135deg, #283593, #3949ab);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      width: 90%; max-width: 400px;
+      text-align: center;
+    }
+    h2 { margin-bottom: 1rem; color: #283593; }
+    label { display: block; text-align: left; margin-top: 1rem; font-weight: bold; color: #444; }
+    input { width: 100%; padding: 0.9rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
+    button { width: 100%; padding: 1rem; margin-top: 1.5rem; background: #283593; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+    button:hover { background: #3949ab; }
+    .toggle { margin-top: 1rem; font-size: 0.9rem; color: #555; cursor: pointer; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 id="formTitle">Admin Login</h2>
+    <form id="adminForm">
+      <div id="registerFields" style="display:none;">
+        <label for="newUsername">Choose Username</label>
+        <input type="text" id="newUsername" placeholder="Enter username">
+        <label for="newPassword">Choose Password</label>
+        <input type="password" id="newPassword" placeholder="Enter password">
+      </div>
+
+      <div id="loginFields">
+        <label for="loginUsername">Username</label>
+        <input type="text" id="loginUsername" placeholder="Enter username">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter password">
+      </div>
+
+      <button type="submit" id="submitBtn">Login</button>
+    </form>
+    <p class="toggle" id="toggleForm">Don't have an account? Register here</p>
+  </div>
+
+  <script>
+    const toggleForm = document.getElementById("toggleForm");
+    const registerFields = document.getElementById("registerFields");
+    const loginFields = document.getElementById("loginFields");
+    const formTitle = document.getElementById("formTitle");
+    const submitBtn = document.getElementById("submitBtn");
+    const adminForm = document.getElementById("adminForm");
+
+    let isRegister = false;
+
+    toggleForm.addEventListener("click", () => {
+      isRegister = !isRegister;
+      registerFields.style.display = isRegister ? "block" : "none";
+      loginFields.style.display = isRegister ? "none" : "block";
+      formTitle.textContent = isRegister ? "Admin Registration" : "Admin Login";
+      submitBtn.textContent = isRegister ? "Register" : "Login";
+      toggleForm.textContent = isRegister ? "Already have an account? Login" : "Don't have an account? Register here";
+    });
+
+    adminForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      if(isRegister){
+        const username = document.getElementById("newUsername").value.trim();
+        const password = document.getElementById("newPassword").value.trim();
+
+        if(!username || !password){ alert("Please fill in both fields!"); return; }
+
+        let admins = JSON.parse(localStorage.getItem("admins")) || [];
+        if(admins.find(a => a.username === username)){ alert("Username already exists!"); return; }
+
+        admins.push({username, password});
+        localStorage.setItem("admins", JSON.stringify(admins));
+        alert("Registration successful! You can now login.");
+        toggleForm.click(); // Switch to login
+      } else {
+        const username = document.getElementById("loginUsername").value.trim();
+        const password = document.getElementById("loginPassword").value.trim();
+
+        let admins = JSON.parse(localStorage.getItem("admins")) || [];
+        if(admins.find(a => a.username === username && a.password === password)){
+          localStorage.setItem("currentAdmin", username); // save session
+          window.location.href = "Adminpage.html"; // redirect to main admin page
+        } else { alert("Invalid username or password!"); }
+      }
+
+      adminForm.reset();
+    });
+  </script>
+</body>
+</html>

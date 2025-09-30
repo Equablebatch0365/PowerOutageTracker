@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Power Outage Tracker</title>
+<style>
+  body { font-family: "Segoe UI", Arial, sans-serif; margin:0; padding:0; background:#eef2f7; color:#333; }
+  header { background: linear-gradient(135deg,#283593,#3949ab); color:white; padding:2rem 1rem; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,0.3);}
+  header h1 { margin:0; font-size:2rem;}
+  header p { margin-top:0.5rem; font-size:1.1rem; opacity:0.9;}
+  .container { width:90%; max-width:800px; margin:2rem auto; }
+  h2 { color:#283593; margin-bottom:1rem; }
+  form { background:white; padding:1.5rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); margin-bottom:2rem; }
+  label { display:block; margin-top:1rem; font-weight:bold; color:#444; }
+  input, textarea, button { width:100%; padding:0.9rem; margin-top:0.5rem; border:1px solid #ccc; border-radius:8px; font-size:0.95rem; }
+  textarea { resize:none; }
+  button { background:#283593; color:white; border:none; margin-top:1.2rem; cursor:pointer; font-weight:bold; transition:background 0.3s ease; }
+  button:hover { background:#3949ab; }
+  .reports { margin-top:2rem; }
+  .report-card { background:white; padding:1rem 1.2rem; border-radius:12px; margin-bottom:1rem; box-shadow:0 3px 8px rgba(0,0,0,0.1); border-left:6px solid #283593; }
+  .report-card strong { color:#283593; }
+  .status { display:inline-block; margin-top:0.5rem; padding:0.3rem 0.6rem; border-radius:6px; font-size:0.85rem; font-weight:bold; }
+  .reported { background:#ffecb3; color:#795548; }
+  .in-progress { background:#bbdefb; color:#0d47a1; }
+  .fixed { background:#c8e6c9; color:#2e7d32; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Power Outage Tracker</h1>
+  <p>Report and track electricity issues in your community</p>
+</header>
+
+<div class="container">
+  <h2>Report an Outage</h2>
+  <form id="reportForm">
+    <label for="name">Your Name</label>
+    <input type="text" id="name" placeholder="Enter your name" required>
+    
+    <label for="area">Area / Street</label>
+    <input type="text" id="area" placeholder="e.g., Roodekop Extension 2" required>
+    
+    <label for="description">Problem Description</label>
+    <textarea id="description" rows="4" placeholder="Transformer down, cables damaged..." required></textarea>
+    
+    <button type="submit">Submit Report</button>
+  </form>
+
+  <div class="reports">
+    <h2>Recent Reports</h2>
+    <div id="reportsContainer"></div>
+  </div>
+</div>
+
+<script>
+  const reportForm = document.getElementById("reportForm");
+  const reportsContainer = document.getElementById("reportsContainer");
+
+  // Initial reports from localStorage
+  let reports = JSON.parse(localStorage.getItem("reports")) || [];
+
+  function renderReports() {
+    reportsContainer.innerHTML = "";
+    reports.forEach((report,index)=>{
+      const card = document.createElement("div");
+      card.className="report-card";
+      card.innerHTML=`
+        <p><strong>Area:</strong> ${report.area}</p>
+        <p><strong>Reported by:</strong> ${report.name}</p>
+        <p><strong>Description:</strong> ${report.description}</p>
+        <span class="status ${report.statusClass}">${report.status}</span>
+      `;
+      reportsContainer.appendChild(card);
+    });
+  }
+
+  reportForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    const name = document.getElementById("name").value;
+    const area = document.getElementById("area").value;
+    const description = document.getElementById("description").value;
+
+    const newReport = {name, area, description, status:"Reported", statusClass:"reported"};
+    reports.push(newReport);
+    localStorage.setItem("reports", JSON.stringify(reports));
+    renderReports();
+    reportForm.reset();
+  });
+
+  // Live update every 1 second
+  setInterval(()=>{
+    const stored = JSON.parse(localStorage.getItem("reports")) || [];
+    if(JSON.stringify(stored) !== JSON.stringify(reports)){
+      reports = stored;
+      renderReports();
+    }
+  }, 1000);
+
+  renderReports();
+</script>
+</body>
+</html>

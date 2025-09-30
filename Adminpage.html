@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - Power Outage Tracker</title>
+<style>
+  body { font-family:"Segoe UI",Arial,sans-serif; margin:0; background:#f5f7fa; color:#333; }
+  header { background:#283593; color:white; padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; }
+  header h1{margin:0; font-size:1.5rem;}
+  .logout-btn{background:#e53935; border:none; padding:.6rem 1rem; border-radius:6px; color:white; cursor:pointer; font-weight:bold; transition:0.3s;}
+  .logout-btn:hover{background:#c62828;}
+  .container{width:90%; max-width:1000px; margin:2rem auto; background:white; padding:2rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+  h2{margin-bottom:1rem; color:#283593;}
+  table{width:100%; border-collapse:collapse;}
+  th, td{text-align:left; padding:.8rem; border-bottom:1px solid #ddd;}
+  th{background:#3949ab; color:white;}
+  tr:hover{background:#f1f1f1;}
+  select{padding:.5rem; border:1px solid #ccc; border-radius:6px;}
+  .status-badge{padding:.3rem .6rem; border-radius:6px; font-size:.85rem; font-weight:bold;}
+  .reported{background:#ffecb3; color:#795548;}
+  .in-progress{background:#bbdefb; color:#0d47a1;}
+  .fixed{background:#c8e6c9; color:#2e7d32;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Admin Dashboard</h1>
+  <div>
+    <span id="adminName"></span>
+    <button class="logout-btn" id="logoutBtn">Logout</button>
+  </div>
+</header>
+
+<div class="container">
+  <h2>Manage Outage Reports</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Area</th>
+        <th>Reported By</th>
+        <th>Description</th>
+        <th>Status</th>
+        <th>Update</th>
+      </tr>
+    </thead>
+    <tbody id="reportsTable"></tbody>
+  </table>
+</div>
+
+<script>
+  // Check login
+  const currentAdmin = localStorage.getItem("currentAdmin");
+  if(!currentAdmin){ window.location.href = "admin-login.html"; }
+  document.getElementById("adminName").textContent = "Logged in as: " + currentAdmin;
+
+  document.getElementById("logoutBtn").addEventListener("click", ()=>{
+    localStorage.removeItem("currentAdmin");
+    window.location.href = "admin-login.html";
+  });
+
+  let reports = JSON.parse(localStorage.getItem("reports")) || [];
+  const reportsTable = document.getElementById("reportsTable");
+
+  function renderTable(){
+    reportsTable.innerHTML = "";
+    reports.forEach((report,index)=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${report.area}</td>
+        <td>${report.name}</td>
+        <td>${report.description}</td>
+        <td><span class="status-badge ${report.statusClass}">${report.status}</span></td>
+        <td>
+          <select data-index="${index}">
+            <option ${report.status=="Reported"?"selected":""}>Reported</option>
+            <option ${report.status=="In Progress"?"selected":""}>In Progress</option>
+            <option ${report.status=="Fixed"?"selected":""}>Fixed</option>
+          </select>
+        </td>`;
+      reportsTable.appendChild(tr);
+    });
+
+    // Add event listeners
+    const selects = reportsTable.querySelectorAll("select");
+    selects.forEach(select=>{
+      select.addEventListener("change", e=>{
+        const idx = select.getAttribute("data-index");
+        const val = select.value;
+        let statusClass="";
+        if(val==="Reported") statusClass="reported";
+        else if(val==="In Progress") statusClass="in-progress";
+        else if(val==="Fixed") statusClass="fixed";
+
+        reports[idx].status=val;
+        reports[idx].statusClass=statusClass;
+        localStorage.setItem("reports", JSON.stringify(reports));
+        renderTable(); // re-render to update badge
+      });
+    });
+  }
+
+  renderTable();
+</script>
+</body>
+</html>
